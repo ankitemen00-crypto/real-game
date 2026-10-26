@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Real Game - Aviator</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+body{margin:0;background:#0a0e1a;color:#fff;font-family:Arial}
+.top{display:flex;justify-content:space-between;padding:10px;background:#141a2b}
+.wallet{color:#0f0;font-weight:bold}
+.game{height:300px;background:linear-gradient(#1a2440,#0a0e1a);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#plane{font-size:40px;position:absolute;left:20%;bottom:20%;transition:0.1s}
+#multi{font-size:50px;font-weight:bold;color:#ffcc00}
+.controls{padding:15px}
+button{width:100%;padding:15px;margin:5px 0;border:0;border-radius:10px;font-size:18px;font-weight:bold}
+.bet{background:#ffcc00}
+.cash{background:#00ff66}
+.depo{background:#2d3a5a;color:#fff}
+input{width:100%;padding:12px;border-radius:8px;border:0;margin:5px 0}
+</style>
+</head>
+<body>
+<div class="top"><b>REAL GAME</b><span class="wallet">₹<span id="bal">0</span></span></div>
+<div class="game"><div id="multi">1.00x</div><div id="plane">✈️</div></div>
+<div class="controls">
+<input id="betAmt" type="number" value="100" placeholder="Bet Amount">
+<button class="bet" onclick="placeBet()">BET - ₹100</button>
+<button class="cash" onclick="cashout()">CASHOUT</button>
+<hr>
+<input id="depAmt" type="number" value="100" placeholder="Deposit Amount">
+<button class="depo" onclick="doDeposit()">DEPOSIT - Add Money (UPI/Card)</button>
+<button class="depo" onclick="window.open('admin.html')">Admin Login</button>
+<button class="depo" id="installBtn" style="display:none;background:#00a6ff" onclick="installApp()">📥 APK DOWNLOAD / INSTALL</button>
+</div>
+<script>
+// === KEYS YAHAN DAALO ===
+const RAZORPAY_KEY = "rzp_test_YOUR_KEY_HERE"; // <-- apni live key yahan
+// ========================
+let bal = parseInt(localStorage.getItem('bal')||'0');
+document.getElementById('bal').innerText=bal;
+let bet=0, playing=false, crashed=false, curr=1.0, timer;
+
+function placeBet(){
+  bet=parseInt(document.getElementById('betAmt').value);
+  if(bal<bet) return alert('Balance kam hai, pehle Deposit karo');
+  if(playing) return;
+  bal-=bet; save();
+  playing=true; crashed=false; curr=1.0;
+  let crashAt = (Math.random()*8+1.2).toFixed(2);
+  timer=setInterval(()=>{
+    curr+=0.05; document.getElementById('multi').innerText=curr.toFixed(2)+'x';
+    document.getElementById('plane').style.bottom=(20+curr*5)+'%';
+    document.getElementById('plane').style.left=(20+curr*3)+'%';
+    if(curr>=crashAt){ clearInterval(timer); document.getElementById('multi').innerText='CRASHED @ '+crashAt+'x'; playing=false; bet=0; }
+  },100);
+}
+function cashout(){
+  if(!playing||crashed) return;
+  clearInterval(timer);
+  let win = Math.floor(bet*curr);
+  bal+=win; save();
+  alert('Won ₹'+win); playing=false; bet=0;
+}
+function save(){ localStorage.setItem('bal',bal); document.getElementById('bal').innerText=bal; }
+
+function doDeposit(){
+  let amt=parseInt(document.getElementById('depAmt').value)||100;
+  var options={key:RAZORPAY_KEY,amount:amt*100,currency:"INR",name:"Real Game Deposit",
+  description:"Add Wallet Balance",handler:function(res){ bal+=amt; save(); alert('Deposit Success ₹'+amt); },
+  prefill:{contact:"9999999999",email:"user@test.com"},theme:{color:"#0a0e1a"}};
+  var rzp=new Razorpay(options); rzp.open();
+}
+
+// APK Install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBtn').style.display='block';});
+function installApp(){ if(deferredPrompt){deferredPrompt.prompt();} }
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+</script>
+</body>
+</html>
