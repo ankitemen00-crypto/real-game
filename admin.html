@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin - Real Game</title>
+<style>body{background:#0a0e1a;color:#fff;font-family:Arial;padding:15px}
+input,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:0}
+button{background:#ffcc00;font-weight:bold}
+.box{background:#141a2b;padding:15px;border-radius:10px;margin:10px 0}
+</style></head><body>
+<h2>Admin Panel</h2>
+<div id="loginBox" class="box"><input id="pass" type="password" placeholder="Admin Password: 1234">
+<button onclick="login()">LOGIN</button></div>
+<div id="panel" style="display:none">
+<div class="box"><h3>Total Users Wallet</h3><p id="stats"></p><button onclick="resetAll()">Reset All Balances</button></div>
+<div class="box"><h3>Set Crash Control</h3><input id="crash" placeholder="Next crash at 1.5x"><button onclick="setCrash()">Set</button></div>
+<div class="box"><button onclick="location.href='index.html'">Go to Game</button></div>
+</div>
+<script>
+function login(){ if(document.getElementById('pass').value=='1234'){ document.getElementById('loginBox').style.display='none'; document.getElementById('panel').style.display='block'; loadStats(); } else alert('Wrong pass'); }
+function loadStats(){ let b=localStorage.getItem('bal')||0; document.getElementById('stats').innerText='Current Device Balance: ₹'+b; }
+function resetAll(){ localStorage.setItem('bal','0'); alert('Reset done'); loadStats(); }
+function setCrash(){ localStorage.setItem('nextCrash',document.getElementById('crash').value); alert('Set'); }
+</script></body></html>
